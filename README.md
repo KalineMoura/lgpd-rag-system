@@ -121,10 +121,10 @@ O aplicativo estará disponível em `http://localhost:8501`
 ```
 .
 ├── app/
-│   └── app.py              # Interface Streamlit
-├── requirements.txt        # Dependências do projeto
-├── .env                    # Variáveis de ambiente (não commitado)
-└── README.md              # Este arquivo
+│   └── app.py             
+├── requirements.txt        
+├── .env                    
+└── README.md              
 ```
 
 ## Limitações Conhecidas
