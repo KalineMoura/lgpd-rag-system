@@ -1,26 +1,57 @@
 from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+# from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
 import os
+import re
+
+
+def infer_doc_type(filename: str) -> str:
+    name = filename.lower()
+    if "lgpd" in name:
+        return "LGPD"
+    return "Desconhecido"
+
+
+def extract_article(text: str):
+    """
+    Best-effort extraction of legal article
+    """
+    match = re.search(r"(Art\.?\s*\d+[º°]?)", text)
+    if match:
+        return match.group(1)
+    return None
+
 
 def extract_pdf_text(pdfs):
     """
-    Extract text from PDF documents
-
-    Parameters:
-    - pdfs (list): List of PDF documents
-
-    Returns:
-    - docs: List of text extracted from PDF documents
+    Extract text from PDF documents and enrich metadata
     """
     docs = []
+
     for pdf in pdfs:
         pdf_path = os.path.join("docs", pdf)
-        # Load text from the PDF and extend the list of documents
-        docs.extend(PyPDFLoader(pdf_path).load())
+        loaded_docs = PyPDFLoader(pdf_path).load()
+
+        doc_type = infer_doc_type(pdf)
+
+        for doc in loaded_docs:
+            # Metadata básica
+            doc.metadata["filename"] = pdf
+            doc.metadata["doc_type"] = doc_type
+
+            # Metadata opcional: artigo
+            article = extract_article(doc.page_content)
+            if article:
+                doc.metadata["article"] = article
+
+        docs.extend(loaded_docs)
+
     return docs
+
 
 def get_text_chunks(docs):
     """
@@ -33,31 +64,41 @@ def get_text_chunks(docs):
     - chunks: List of text chunks
     """
     # Chunk size is configured to be an approximation to the model limit of 2048 tokens
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=8000, chunk_overlap=800, separators=["\n\n", "\n", " ", ""])
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=2000, chunk_overlap=300, separators=["\n\n", "\n", " ", ""]
+    )
     chunks = text_splitter.split_documents(docs)
     return chunks
 
+
 def get_vectorstore(pdfs, from_session_state=False):
-    """
-    Create or retrieve a vectorstore from PDF documents
-
-    Parameters:
-    - pdfs (list): List of PDF documents
-    - from_session_state (bool, optional): Flag indicating whether to load from session state. Defaults to False
-
-    Returns:
-    - vectordb or None: The created or retrieved vectorstore. Returns None if loading from session state and the database does not exist
-    """
     load_dotenv()
-    embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+
+    embedding = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
+    )
+
+    # Caso 1: carregar DB existente
     if from_session_state and os.path.exists("Vector_DB - Documents"):
-        # Retrieve vectorstore from existing one
-        vectordb = Chroma(persist_directory="Vector_DB - Documents", embedding_function=embedding)
-        return vectordb
-    elif not from_session_state:
-        docs = extract_pdf_text(pdfs)
-        chunks = get_text_chunks(docs)
-        # Create vectorstore from chunks and saves it to the folder Vector_DB - Documents
-        vectordb = Chroma.from_documents(documents=chunks, embedding=embedding, persist_directory="Vector_DB - Documents")
-        return vectordb
-    return None
+        return Chroma(
+            persist_directory="Vector_DB - Documents", embedding_function=embedding
+        )
+
+    # Caso 2: criar DB do zero
+    docs = extract_pdf_text(pdfs)
+    chunks = get_text_chunks(docs)
+
+    print("\n=== DEBUG METADATA (primeiros 3 chunks) ===")
+    for i, chunk in enumerate(chunks[:3]):
+        print(f"\nChunk {i}")
+        print("Metadata:", chunk.metadata)
+        print("Preview:", chunk.page_content[:200])
+
+    if not chunks:
+        raise ValueError("No text chunks could be created from the PDF.")
+
+    return Chroma.from_documents(
+        documents=chunks,
+        embedding=embedding,
+        persist_directory="Vector_DB - Documents",
+    )
