@@ -18,7 +18,7 @@ Explorar boas práticas de RAG confiável, com foco em:
 
 ## Interface
 
-![RAG LGPD Chatbot](Images/project_schema.png)
+![RAG LGPD Chatbot](Images/app.interface.png)
 
 ## Funcionalidades
 
