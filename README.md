@@ -1,54 +1,62 @@
-# Consultor LGPD – RAG Jurídico (V2: Avaliação e Diagnóstico)
+# Consultor LGPD – RAG Jurídico
 
-Esta versão avalia sistematicamente o desempenho do sistema RAG desenvolvido 
-na V1, com foco em identificar limitações, medir qualidade objetivamente, e 
-diagnosticar o comportamento do retrieval.
+Este projeto implementa um chatbot baseado em RAG (Retrieval-Augmented Generation) especializado na Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
 
-
-## Objetivo
-
-Diagnosticar empiricamente onde e por que o sistema falha, estabelecendo 
-baseline quantitativo para orientar melhorias futuras.
+O sistema responde com base em trechos recuperados da legislação, buscando reduzir alucinações e fornecer rastreabilidade das respostas por meio da citação explícita das fontes (artigo e página).
 
 
-## Metodologia 
+## Objetivo do Projeto
 
-A avaliação foi conduzida utilizando um gold set de 36 perguntas anotadas 
-manualmente, cobrindo diferentes categorias:
+Investigar e desenvolver um sistema RAG confiável aplicado a textos legais, evoluindo progressivamente por meio de versões experimentais e avaliação empírica.
 
-- conceitos legais
-- bases legais
-- direitos do titular
-- obrigações do controlador
-- sanções administrativas
-- perguntas ambíguas
-- perguntas incompletas
-- perguntas fora de escopo
+- Redução de alucinações
+- Rastreabilidade via citações explícitas
+- Recuperação semântica fundamentada
+- Avaliação rigorosa e melhorias baseadas em dados
+- Identificação sistemática de limitações
+
+> **Nota 1:** Este projeto foi desenvolvido a partir do repositório [vitorccmanso/Rag-ChatBot](https://github.com/vitorccmanso/Rag-ChatBot), com adaptações para execução local e uso de modelos de embedding com pesos públicos,
+> executáveis localmente.
+
+> **Nota 2:** Nesta fase, optou-se por manter o texto integral dos documentos, incluindo notas editoriais e trechos revogados, a fim de estabelecer um baseline realista para avaliação do sistema. A limpeza e normalização do texto são consideradas como trabalhos futuros.
+
+
+## Roadmap do Projeto
+
+### Versão 1 — Implementação (Concluída)
+
+Sistema RAG jurídico funcional com pipeline completo.
+
+**Principais features:**
+- Chunking otimizado para textos jurídicos (86% dos artigos preservados íntegros)
+- Embeddings locais (`all-MiniLM-L6-v2`)
+- ChromaDB para indexação vetorial
+- Retrieval semântico (top_k = 10)
+- Geração via GPT-4o-mini com prompt restritivo
+- Citação automática (artigo + página)
+- Fallback controlado
+
+**Limitações conhecidas:**
+- Fallback não solicita reformulação
+- Similaridade semântica pode falhar em artigos definidores
+- Chunk pode não herdar metadata em alguns casos
+- Sem re-ranking ou query rewriting
+
+### Versão 2 — Avaliação e Diagnóstico (Concluída)
+
+Avaliação empírica do sistema da V1 utilizando um gold set de 36 perguntas anotadas manualmente.
+
+#### Metodologia
 
 Para cada consulta foram registrados:
+- Resposta gerada pelo sistema
+- Artigos legais esperados
+- Trechos recuperados pelo mecanismo de busca
+- Avaliação manual da qualidade
+- Métricas automáticas
+- Classificação do comportamento (resposta direta ou fallback)
 
-- resposta gerada pelo sistema
-- artigos legais esperados (ground truth)
-- trechos (chunks) recuperados pelo mecanismo de busca
-- avaliação manual da qualidade da resposta
-- métricas automáticas de avaliação
-- classificação do comportamento do sistema (resposta direta ou fallback)
-
-
-## Sistema Avaliado
-
-A avaliação foi realizada sobre o pipeline desenvolvido na Versão 1, composto por:
-
-- Ingestão do PDF da LGPD
-- Chunking com `RecursiveCharacterTextSplitter`
-- Embeddings `all-MiniLM-L6-v2`
-- Indexação vetorial com ChromaDB
-- Retrieval semântico (top-k = 10)
-- Geração via GPT-4o-mini com prompt restritivo
-- Mecanismo de fallback controlado
-
-
-## Avaliação do Retrieval
+#### Resultados - Avaliação do Retrieval
 
 Considerando apenas perguntas in-scope (com artigo esperado):
 
@@ -61,82 +69,99 @@ Considerando apenas perguntas in-scope (com artigo esperado):
 **Todos artigos esperados:** 51,6% (Moderado)
 - Metade consegue cobertura completa
 
-**Padrão:** Comportamento polarizado (tudo ou nada) - quando acerta, acerta bem; quando erra, erra completamente.
+**Padrão identificado:** Comportamento polarizado (tudo ou nada) - quando acerta, acerta bem; quando erra, quando erra, falha completamente.
 
 **Conclusão:** Retrieval é o principal gargalo do sistema.
 
+#### Pontos Fortes Identificados
 
-## Avaliação Completa
-
-A avaliação detalhada do sistema foi realizada por meio de um notebook dedicado, que documenta a metodologia, as métricas utilizadas e a análise dos resultados.
-
-Notebook:
-
-[analyse_results_v2.ipynb](analysis/evaluation/analyse_results_v2.ipynb)
-
-Dados utilizados na avaliação (gold set e anotações):
-
-[avaliacao_v2_final.xlsx](analysis/evaluation/avaliacao_v2_final.xlsx)
-
-
-## Resultados e Observações
-
-### Pontos Fortes Identificados
 - Sistema reconhece adequadamente perguntas fora de escopo
 - Zero alucinações detectadas (todas respostas baseadas em contexto)
 - LLM-as-judge teve melhor alinhamento com avaliação humana que similaridade semântica
 
-### Limitações Identificadas
-- **Gargalo crítico no retrieval:** 45,2% das queries não recuperam artigo esperado
-- Fallback acionado com frequência excessiva e nem sempre apropriado
-- Fallback não sugere reformulação (limita UX)
+#### Limitações Identificadas
+
+- Alta taxa de falha na recuperação de contexto
+- Fallback acionado com frequência excessiva
+- Ausência de sugestões de reformulação
 - Muitas respostas incorretas decorrem de contexto inadequado/insuficiente
 
-### Insights Técnicos
-- Retrieval tem comportamento polarizado (tudo ou nada)
-- Rotulagem inconsistente de chunks dificulta análise precisa
-- Similaridade semântica não garante qualidade jurídica
+#### Análise detalhada disponível em:
+
+- [Notebook de análise](./analysis/evaluation/analyse_results_v2.ipynb)
+- [Dados da avaliação](./analysis/evaluation/avaliacao_v2_final.xlsx)
 
 
-## Limitações da Avaliação
+## Arquitetura
 
-- Em alguns casos, inconsistências na rotulagem automática dos chunks dificultaram a identificação precisa do artigo recuperado.
-- Foi utilizada uma verificação manual (artigo_real_recuperado) para mitigar esse problema.
-- Pequenas imprecisões residuais podem afetar marginalmente as métricas de retrieval.
+Pipeline do sistema:
+
+1. Ingestão offline do texto da LGPD (base normativa fixa).
+2. Chunking com `RecursiveCharacterTextSplitter` 
+3. Geração de embeddings (`all-MiniLM-L6-v2`)
+4. Armazenamento vetorial com ChromaDB
+5. Retrieval semântico (top-k)
+6. Geração de resposta via LLM
+7. Exibição de citações (artigo + página)
+8. Fallback controlado quando não há contexto suficiente
 
 
-## Estrutura da Avaliação
+## Funcionalidades
 
+- Perguntas em linguagem natural sobre LGPD
+- Respostas fundamentadas exclusivamente no texto legal
+- Citações explícitas das fontes (artigo e página)
+- Detecção automática de perguntas fora de escopo
+- Controle de alucinação via fallback
+- Interface de chat simples para consulta jurídica
+
+
+## Como Executar (V1)
+
+### Pré-requisitos
+
+- Python 3.10 ou superior
+- Chave de API da OpenAI
+
+### Instalação
+
+1. Clone o repositório:
+```bash
+git clone 
+cd 
 ```
-analysis/
-└── evaluation/
-    ├── analyse_results_v2.ipynb
-    └── avaliacao_v2_final.xlsx
 
+2. Instale as dependências:
+```bash
+pip install -r requirements.txt
 ```
 
-# Próximos Passos
+3. Configure a chave da API da OpenAI:
 
-## Versão 3 — Otimização do Retrieval
+Crie um arquivo `.env` na raiz do projeto:
+```env
+OPENAI_API_KEY=sua_chave_aqui
+```
 
-Com base nos resultados obtidos, a próxima etapa do projeto foca na melhoria do mecanismo de recuperação de informações.
+### Execução
 
-Principais direções:
-
-- melhorias no mecanismo de retrieval
-- aprimoramento do mecanismo de fallback, incluindo sugestões de reformulação de perguntas
-- melhoria na rotulagem dos chunks
-- embeddings mais adequados ao domínio jurídico
-- query rewriting
-- reranking dos resultados
-- possíveis abordagens híbridas de busca
-- limpeza e normalização do texto da base normativa (remoção de trechos revogados e notas editoriais)
-
-**Objetivo:** Aumentar a taxa de recuperação de pelo menos 1 artigo relevante 
-de 54,8% para >80%, reduzindo falhas críticas (zero artigos) de 45,2% para <20%.
+Execute o aplicativo Streamlit:
+```bash
+streamlit run app/app.py
+```
+O aplicativo estará disponível em `http://localhost:8501`
 
 
-
-
-
-
+## Estrutura do Projeto
+```
+.
+├── app/                    # V1: Aplicação Streamlit
+│   └── app.py
+├── analysis/               # V2: Avaliação
+│   └── evaluation/
+│       ├── analyse_results_v2.ipynb
+│       └── avaliacao_v2_final.xlsx
+├── requirements.txt
+├── .env.example
+└── README.md              # Este arquivo
+```
