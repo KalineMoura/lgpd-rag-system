@@ -7,7 +7,7 @@ O sistema responde com base em trechos recuperados da legislação, buscando red
 
 ## Objetivo do Projeto
 
-Investigar e desenvolver um sistema RAG confiável aplicado a textos legais, evoluindo progressivamente por meio de versões experimentais e avaliação empírica.
+Investigar e desenvolver um sistema RAG confiável aplicado a textos legais, destinado à exploração, estudo e avaliação de técnicas de recuperação e geração baseadas em LLMs, evoluindo progressivamente por meio de versões experimentais e análise empírica.
 
 - Redução de alucinações
 - Rastreabilidade via citações explícitas
@@ -168,7 +168,7 @@ O aplicativo estará disponível em `http://localhost:8501`
 
 ## Próximos passos: Otimização do Retrieval
 
-Com base no diagnóstico da V2, a próxima fase focará em corrigir o principal gargalo identificado: a falha de recuperação em 45,2% das queries.
+Com base no diagnóstico da V2, a próxima fase focará em corrigir o principal gargalo identificado: a falha de recuperação em 45,2% das querys.
 
 Principais direções:
 
