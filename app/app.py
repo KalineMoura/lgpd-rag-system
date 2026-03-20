@@ -12,7 +12,6 @@ class ChatApp:
     """
 
     def __init__(self):
-        # Ensure docs folder exists
         if not os.path.exists("docs"):
             os.makedirs("docs")
 
@@ -21,7 +20,6 @@ class ChatApp:
             page_title="Consultor LGPD ⚖️", page_icon="⚖️", layout="centered"
         )
 
-        # Custom CSS
         st.markdown(
             """
             <style>
@@ -129,10 +127,8 @@ class ChatApp:
             unsafe_allow_html=True,
         )
 
-        # Initialize session state
         initialize_session_state_variables(st)
 
-        # Create or load vectorstore ONCE
         if st.session_state.vectordb is None:
             if os.path.exists("Vector_DB - Documents"):
                 st.session_state.vectordb = get_vectorstore(
@@ -144,7 +140,7 @@ class ChatApp:
                 )
 
     def run(self):
-        # Sidebar melhorado
+        #sidebar melhorado
         with st.sidebar:
             st.markdown("### 📚 Base de Conhecimento")
 
@@ -156,7 +152,7 @@ class ChatApp:
                     st.markdown(f"📄 {doc}")
                 st.markdown("</div>", unsafe_allow_html=True)
 
-                # Informações adicionais
+                #informações adicionais
                 st.markdown("---")
                 st.markdown("### ℹ️ Sobre")
                 st.info(
@@ -167,7 +163,6 @@ class ChatApp:
             else:
                 st.warning("⚠️ Nenhum documento encontrado em /docs")
 
-        # Chat is ALWAYS available
         if st.session_state.vectordb is not None:
             st.session_state.chat_history = chat(
                 st.session_state.chat_history, st.session_state.vectordb
