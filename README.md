@@ -2,7 +2,7 @@
 
 Este projeto implementa um chatbot baseado em RAG (Retrieval-Augmented Generation) especializado na Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
 
-O sistema responde com base em trechos recuperados da legislação, buscando reduzir alucinações e fornecer rastreabilidade das respostas por meio da citação explícita das fontes (artigo e página).
+O sistema responde com base em trechos recuperados da legislação, buscando reduzir alucinações e fornecer rastreabilidade das respostas por meio da citação explícita das fontes.
 
 
 ## Objetivo do Projeto
@@ -31,9 +31,9 @@ Sistema RAG jurídico funcional com pipeline completo.
 - Chunking otimizado para textos jurídicos (86% dos artigos preservados íntegros)
 - Embeddings locais (`all-MiniLM-L6-v2`)
 - ChromaDB para indexação vetorial
-- Retrieval semântico (top_k = 10)
+- Retrieval semântico (top_k)
 - Geração via GPT-4o-mini com prompt restritivo
-- Citação automática (artigo + página)
+- Citação automática 
 - Fallback controlado
 
 **Limitações conhecidas:**
